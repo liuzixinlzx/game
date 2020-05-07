@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 
 @RestController
 @RequestMapping("/weixin")
@@ -28,7 +29,7 @@ public class WeixinController {
     private GuestPlayerController guestPlayerController;
 
     @RequestMapping
-    public ResponseEntity<ResultData> weixinLogin(HttpServletRequest request, @RequestParam String code){
+    public ResponseEntity<ResultData> weixinLogin(HttpServletRequest request, @RequestParam String code) throws UnsupportedEncodingException {
         RestTemplate restTemplate = new RestTemplate();
         String access_tokenURL = "http://api.weixin.qq.com/sns/oauth2/access_token?"
                 +"appid=" + appid
@@ -50,7 +51,8 @@ public class WeixinController {
                 +"&openid="+openid
                 +"&lang=zh_CN";
 
-        String userinfoStr = restTemplate.getForObject(userinfoUrl , String.class);
+        String userinfoStr0 = restTemplate.getForObject(userinfoUrl , String.class);
+        String userinfoStr = new String(userinfoStr0.getBytes("ISO-8859-1"), "UTF-8");
         JSONObject  userinfoObj =  JSONObject.parseObject(userinfoStr);
         if(userinfoObj.get("errmsg") != null){
             String errmsg = userinfoObj.get("errmsg").toString();
@@ -65,6 +67,7 @@ public class WeixinController {
         playUser.setUsername(openid);
         playUser.setNickname(nickname);
         playUser.setGender(sex);
+        playUser.setHeadimgurl(headimgurl);
 
         ResponseEntity<ResultData>  resultData = guestPlayerController.guestPlayer(request, playUser);
         return resultData;

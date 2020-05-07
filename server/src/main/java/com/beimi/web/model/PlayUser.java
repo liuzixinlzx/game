@@ -81,6 +81,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	
 	private boolean datastatus ;//数据状态，是否已删除	
 	private boolean headimg ; 	//是否上传头像
+
+	private String headimgurl;	//头像url
 	
 	private String playerlevel ;//玩家级别 ， 等级
 	private int experience  ;	//玩家经验
@@ -394,6 +396,15 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 
 	public void setHeadimg(boolean headimg) {
 		this.headimg = headimg;
+	}
+
+
+	public String getHeadimgurl() {
+		return headimgurl;
+	}
+
+	public void setHeadimgurl(String headimgurl) {
+		this.headimgurl = headimgurl;
 	}
 
 

@@ -57,6 +57,8 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 	private String status ;		//
 	private boolean datastatus ;//数据状态，是否已删除	
 	private boolean headimg ; 	//是否上传头像
+
+	private String headimgurl;	//头像url
 	
 	private String roomid ;		//加入的房间ID
 	private boolean roomready ;	//在房间中已经准备就绪
@@ -244,6 +246,14 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 		this.headimg = headimg;
 	}
 
+
+	public String getHeadimgurl() {
+		return headimgurl;
+	}
+
+	public void setHeadimgurl(String headimgurl) {
+		this.headimgurl = headimgurl;
+	}
 
 	public String getPlayerlevel() {
 		return playerlevel;
