@@ -4,8 +4,30 @@ cc.Class({
 
     // use this for initialization
     onLoad: function () {
-
+        function GetRequest() {//这个函数，其实就是js的方法，在我的博客中能找到出处的
+            var url = location.search; //获取url中"?"符后的字串
+            var theRequest = new Object();
+            if (url.indexOf("?") != -1) {
+              var str = url.substr(1);
+              var strs = str.split("&");
+              for(var i = 0; i < strs.length; i ++) {
+                theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+              }
+            }
+            return theRequest;
+          }
+        var Request = new Object();//使用方法也和纯js一样的，不信可以打印看看
+        Request = GetRequest();
+        var code=Request["code"]; 
+        if(code){
+            this.io = require("IOUtils");
+            this.loadding();
+            var xhr = cc.beimi.http.httpGet("/weixin?"+code, this.sucess , this.error , this);
+            console.log("code:" + code);
+        }
+        
     },
+
     login:function(){
         this.io = require("IOUtils");
         this.loadding();
@@ -19,7 +41,17 @@ cc.Class({
                 var xhr = cc.beimi.http.httpGet("/api/guest?token="+data.token.id, this.sucess , this.error , this);
             }
         }
-	},
+    },
+    
+    weixinLogin:function(){
+        window.location = "https://open.weixin.qq.com/connect/oauth2/authorize?"
+            +"appid=wxfc17d017b8180ca5"
+            +"&redirect_uri=" + encodeURIComponent("http://lzxplay.top")
+            +"&response_type=code"
+            +"&scope=snsapi_userinfo"
+            +"&state=STATE#wechat_redirect";
+    },
+
     sucess:function(result , object){
         var data = JSON.parse(result) ;
         if(data!=null && data.token!=null && data.data!=null){

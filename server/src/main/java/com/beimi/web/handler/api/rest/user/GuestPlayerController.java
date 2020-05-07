@@ -124,6 +124,67 @@ public class GuestPlayerController extends Handler{
 		 */
         return new ResponseEntity<>(playerResultData, HttpStatus.OK);
     }
+
+	public ResponseEntity<ResultData> guestPlayer(HttpServletRequest request , PlayUser playUser) {
+		PlayUserClient playUserClient = null ;
+		Token userToken = null ;
+
+		String ip = UKTools.getIpAddr(request);
+		IP ipdata = IPTools.getInstance().findGeography(ip);
+		if(playUserClient == null){
+			try {
+				playUserClient = register(playUser , ipdata , request) ;
+			} catch (IllegalAccessException | InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+		if(userToken == null){
+			userToken = new Token();
+			userToken.setIp(ip);
+			userToken.setRegion(ipdata.getProvince()+ipdata.getCity());
+			userToken.setId(UKTools.getUUID());
+			userToken.setUserid(playUserClient.getId());
+			userToken.setCreatetime(new Date());
+			userToken.setOrgi(playUserClient.getOrgi());
+			AccountConfig config = CacheConfigTools.getGameAccountConfig(BMDataContext.SYSTEM_ORGI) ;
+			if(config!=null && config.getExpdays() > 0){
+				userToken.setExptime(new Date(System.currentTimeMillis()+60*60*24*config.getExpdays()*1000));//默认有效期 ， 7天
+			}else{
+				userToken.setExptime(new Date(System.currentTimeMillis()+60*60*24*7*1000));//默认有效期 ， 7天
+			}
+			userToken.setLastlogintime(new Date());
+			userToken.setUpdatetime(new Date(0));
+
+			tokenESRes.save(userToken) ;
+		}
+		playUserClient.setToken(userToken.getId());
+		CacheHelper.getApiUserCacheBean().put(userToken.getId(),userToken, userToken.getOrgi());
+		CacheHelper.getApiUserCacheBean().put(playUserClient.getId(),playUserClient, userToken.getOrgi());
+		ResultData playerResultData = new ResultData( playUserClient!=null , playUserClient != null ? MessageEnum.USER_REGISTER_SUCCESS: MessageEnum.USER_REGISTER_FAILD_USERNAME , playUserClient , userToken) ;
+		GameConfig gameConfig = CacheConfigTools.getGameConfig(userToken.getOrgi()) ;
+		if(gameConfig!=null){
+			playerResultData.setGametype(gameConfig.getGamemodel());
+			playerResultData.setNoaiwaitime(gameConfig.getTimeout());	//无AI的时候 等待时长
+			playerResultData.setNoaimsg(gameConfig.getTimeoutmsg());    //无AI的时候，到达最大时长以后的 提示消息，提示完毕后，解散房间
+			/**
+			 * 封装 游戏对象，发送到客户端
+			 */
+			/**
+			 * 找到游戏配置的 模式 和玩法，如果多选，则默认进入的是 大厅模式，如果是单选，则进入的是选场模式
+			 */
+			playerResultData.setGames(GameUtils.games(gameConfig.getGametype()));
+		}
+		AiConfig aiConfig = CacheConfigTools.getAiConfig(userToken.getOrgi()) ;
+		if(aiConfig!=null){
+			playerResultData.setEnableai(aiConfig.isEnableai());
+			playerResultData.setWaittime(aiConfig.getWaittime());
+		}
+		/**
+		 * 根据游戏配置 ， 选择 返回的 玩法列表
+		 */
+		return new ResponseEntity<>(playerResultData, HttpStatus.OK);
+	}
+
 	/**
 	 * 注册用户
 	 * @param player
